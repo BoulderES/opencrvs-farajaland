@@ -155,24 +155,22 @@ const parsedNumber = z
   .transform(parseFloat)
   .refine((val: number) => !Number.isNaN(val), 'Failed to parse number')
 
-const Statistic = (rangeInYear: number[]) =>
-  z.object({
-    adminPcode: z.string(),
-    name: z.string(),
-    ...Object.fromEntries(
-      range(rangeInYear[0], rangeInYear[1]).flatMap((year) => [
-        [`male_population_${year}`, parsedNumber],
-        [`female_population_${year}`, parsedNumber],
-        [`population_${year}`, parsedNumber],
-        [`crude_birth_rate_${year}`, parsedNumber]
-      ])
-    )
-  })
+const Statistic = z.object({
+  adminPcode: z.string(),
+  name: z.string(),
+  ...Object.fromEntries(
+    range(2007, 2021).flatMap((year) => [
+      [`male_population_${year}`, parsedNumber],
+      [`female_population_${year}`, parsedNumber],
+      [`population_${year}`, parsedNumber],
+      [`crude_birth_rate_${year}`, parsedNumber]
+    ])
+  )
+})
 
-const Statistics = (rangeInYear: number[]) =>
-  Statistic(rangeInYear)
-    .array()
-    .superRefine(zodValidateDuplicates('adminPcode'))
+export const Statistics = Statistic.array().superRefine(
+  zodValidateDuplicates('adminPcode')
+)
 
 function printIssue(issue: z.ZodIssue) {
   // eslint-disable-next-line no-console
@@ -244,49 +242,9 @@ async function main() {
   log(chalk.green('Admin levels parsed'), '✅', '\n')
 
   log(chalk.yellow('Validating statistics file.'))
-  const rawStatistics: [] = await readCSVToJSON(process.argv[6])
+  const rawStatistics = await readCSVToJSON(process.argv[6])
+  const statistics = Statistics.parse(rawStatistics)
 
-  // regex to match year in header
-  const yearRegex = /^population_(\d{4})$/
-
-  // Find the year range in the CSV headers
-  const csvStatisticsHeaders = [...new Set(rawStatistics.flatMap(Object.keys))]
-  const yearRange = csvStatisticsHeaders
-    .filter((header) => {
-      return yearRegex.test(header)
-    })
-    .map((header) => {
-      const match = header.match(yearRegex)
-      return match ? parseInt(match[1]) : null
-    })
-    .reduce(
-      ([min, max], year) => [
-        Math.min(min, year ?? Infinity),
-        Math.max(max, year ?? -Infinity)
-      ],
-      [Infinity, -Infinity]
-    )
-
-  const statistics = Statistics(yearRange).parse(rawStatistics)
-
-  // Require all MAX_ADMIN_LEVEL locations being included in the statistics file
-  const onlyAdminPCodesOfStatistics = statistics.map(
-    ({ adminPcode }) => adminPcode
-  )
-  const isEveryMaxAdminLevelLocationInStatistics = locations.every((location) =>
-    onlyAdminPCodesOfStatistics.includes(
-      location[`admin${MAX_ADMIN_LEVEL}Pcode`]!
-    )
-  )
-  if (!isEveryMaxAdminLevelLocationInStatistics) {
-    error(
-      chalk.blue(`STATISTIC ERROR!`),
-      `For every ${`admin${MAX_ADMIN_LEVEL}Pcode`} in location CSV there is not a corresponding entry in statistics CSV`
-    )
-    process.exit(1)
-  }
-
-  // Validate if every statistic location actually exists in locations CSV
   for (const statistic of statistics) {
     let location
     for (let i = MAX_ADMIN_LEVEL; i > 0; i--) {
@@ -355,7 +313,7 @@ async function main() {
       const childrenLocations = locationHierarchyMap[location]
       const ownStat = statisticsMap.get(location)
       if (!ownStat) {
-        continue
+        return
       }
       for (const year of ownStat?.years) {
         const yearWiseChildrenStats = childrenLocations

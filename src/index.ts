@@ -9,8 +9,10 @@
  * Copyright (C) The OpenCRVS Authors. OpenCRVS and the OpenCRVS
  * graphic logo are (registered/a) trademark(s) of Plan International.
  */
+// tslint:disable no-var-requires
 require('app-module-path').addPath(require('path').join(__dirname))
 
+// tslint:enable no-var-requires
 import fetch from 'node-fetch'
 import * as Hapi from '@hapi/hapi'
 import getPlugins from '@countryconfig/config/plugins'
@@ -39,9 +41,7 @@ import {
   notificationHandler,
   notificationScheme
 } from './features/notification/handler'
-import { mosipMediatorHandler } from '@countryconfig/features/mediators/mosip-openhim-mediator/handler'
-import { ErrorContext } from 'hapi-auth-jwt2'
-import { mapGeojsonHandler } from '@countryconfig/features/map/handler'
+import { mosipMediatorHandler } from './features/mediators/mosip-openhim-mediator/handler'
 
 export interface ITokenPayload {
   sub: string
@@ -145,39 +145,10 @@ export async function createServer() {
 
   await server.register(getPlugins())
 
-  let publicKey = await getPublicKey()
-  let publicKeyUpdatedAt = Date.now()
+  const publicKey = await getPublicKey()
 
   server.auth.strategy('jwt', 'jwt', {
-    key: () => ({ key: publicKey }),
-    errorFunc: (errorContext: ErrorContext) => {
-      /*
-       * If an incoming request fails with a 401 Unauthorized, we need to check if the
-       * public key we have is still valid. If it is not, we fetch a new one.
-       * This is done only once every minute to avoid invalid tokens spamming the server.
-       */
-
-      const moreThanAMinuteFromLatestUpdate =
-        publicKeyUpdatedAt < Date.now() - 60000
-      if (
-        errorContext.errorType === 'unauthorized' &&
-        moreThanAMinuteFromLatestUpdate
-      ) {
-        logger.info(
-          'Request failed, fetching a new public key. This might either be a client with an outdated token or the server public key being outdated. Trying to update the server public key...'
-        )
-        getPublicKey()
-          .then((newPublicKey) => {
-            logger.info('Key fetched, updating')
-            publicKeyUpdatedAt = Date.now()
-            publicKey = newPublicKey
-          })
-          .catch((err) => {
-            logger.error('Fetching a new public key failed', err)
-          })
-      }
-      return errorContext
-    },
+    key: publicKey,
     verifyOptions: {
       algorithms: ['RS256'],
       issuer: 'opencrvs:auth-service',
@@ -251,17 +222,6 @@ export async function createServer() {
       auth: false,
       tags: ['api'],
       description: 'Serves language content'
-    }
-  })
-
-  server.route({
-    method: 'GET',
-    path: '/content/farajaland-map.geojson',
-    handler: mapGeojsonHandler,
-    options: {
-      auth: false,
-      tags: ['api'],
-      description: 'Serves map geojson'
     }
   })
 

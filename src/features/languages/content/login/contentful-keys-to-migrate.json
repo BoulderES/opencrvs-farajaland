@@ -43,7 +43,6 @@
   "resend.sms",
   "error.networkError",
   "login.stepOneInstruction",
-  "login.stepOneText",
   "login.submit",
   "login.forgotPassword",
   "login.submissionError",

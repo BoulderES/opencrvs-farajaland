@@ -9,10 +9,12 @@
  * Copyright (C) The OpenCRVS Authors. OpenCRVS and the OpenCRVS
  * graphic logo are (registered/a) trademark(s) of Plan International.
  */
-import { ILocation } from '@countryconfig/features/utils'
+import {
+  ILocation,
+  getLocationIDByDescription,
+  sendToFhir
+} from '@countryconfig/features/utils'
 import { ORG_URL } from '@countryconfig/constants'
-import { v4 as uuid } from 'uuid'
-import * as mongoose from 'mongoose'
 
 export interface IFacility {
   id: string
@@ -26,11 +28,6 @@ const composeFhirLocation = (
   partOfReference: string
 ): fhir.Location => {
   return {
-    id: uuid(),
-    meta: {
-      lastUpdated: new Date().toISOString(),
-      versionId: uuid()
-    },
     resourceType: 'Location',
     identifier: [
       {
@@ -89,27 +86,34 @@ function getPartOfIdForFacility(facility: IFacility): string {
 
 export async function composeAndSaveFacilities(
   facilities: IFacility[]
-): Promise<void> {
+): Promise<fhir.Location[]> {
   const locations: fhir.Location[] = []
-  const parentLocations = await mongoose.connection.db
-    .collection('Location')
-    .find({
-      description: {
-        $in: facilities.map((facility) => getPartOfIdForFacility(facility))
-      }
-    })
-    .toArray()
-
   for (const facility of facilities) {
-    const parentLocationID = parentLocations.find(
-      ({ description }) => description === getPartOfIdForFacility(facility)
-    ).id
-
+    console.log('facility: ', JSON.stringify(facility))
+    const parentLocationID = await getLocationIDByDescription(
+      getPartOfIdForFacility(facility)
+    )
+    console.log('parentLocationID: ', parentLocationID)
     const newLocation: fhir.Location = composeFhirLocation(
       facility,
       `Location/${parentLocationID}`
     )
+    // tslint:disable-next-line:no-console
+    console.log(
+      `Saving facility ... type: ${facility.code}, name: ${facility.name}`
+    )
+    const savedLocationResponse = await sendToFhir(
+      newLocation,
+      '/Location',
+      'POST'
+    ).catch((err) => {
+      throw Error('Cannot save location to FHIR')
+    })
+    const locationHeader = savedLocationResponse.headers.get(
+      'location'
+    ) as string
+    newLocation.id = locationHeader.split('/')[3]
     locations.push(newLocation)
   }
-  await mongoose.connection.db.collection('Location').insertMany(locations)
+  return locations
 }

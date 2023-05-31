@@ -111,7 +111,6 @@ docker run --rm --network=$NETWORK mongo:4.4 mongo user-mgnt $(mongo_credentials
 docker run --rm --network=$NETWORK mongo:4.4 mongo application-config $(mongo_credentials) --host $HOST --eval "db.dropDatabase()"
 docker run --rm --network=$NETWORK mongo:4.4 mongo metrics $(mongo_credentials) --host $HOST --eval "db.dropDatabase()"
 docker run --rm --network=$NETWORK mongo:4.4 mongo webhooks $(mongo_credentials) --host $HOST --eval "db.dropDatabase()"
-docker run --rm --network=$NETWORK mongo:4.4 mongo performance $(mongo_credentials) --host $HOST --eval "db.dropDatabase()"
 
 # Delete all data from search
 #----------------------------
@@ -128,10 +127,6 @@ docker run --rm --network=$NETWORK appropriate/curl curl -X POST 'http://influxd
 #-----------------------------
 rm -rf /data/minio/ocrvs
 mkdir -p /data/minio/ocrvs
-
-# Delete all data from metabase
-#-----------------------------
-rm -rf /data/metabase/*
 
 # Delete all data from vsExport
 #-----------------------------
@@ -188,11 +183,7 @@ fi
 #----------------------------
 tar -xzvf /data/backups/minio/ocrvs-$1.tar.gz -C /data/minio
 
-# Restore all data from Metabase
-#----------------------------
-tar -xzvf /data/backups/metabase/ocrvs-$1.tar.gz -C /data/metabase
-
-# Restore VSExport
+# Restore VSExport 
 tar -xzvf /data/backups/vsexport/ocrvs-$1.tar.gz -C /data/vsexport
 
 # Run migrations by restarting migration service

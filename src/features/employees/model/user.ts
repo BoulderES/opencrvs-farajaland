@@ -79,6 +79,7 @@ export interface IUser {
 
 export interface IUserModel extends IUser, Document {}
 
+// tslint:disable-next-line
 const UserNameSchema = new Schema(
   {
     use: String,
@@ -87,6 +88,7 @@ const UserNameSchema = new Schema(
   },
   { _id: false }
 )
+// tslint:disable-next-line
 const IdentifierSchema = new Schema(
   {
     system: String,
@@ -94,6 +96,7 @@ const IdentifierSchema = new Schema(
   },
   { _id: false }
 )
+// tslint:disable-next-line
 const SecurityQuestionAnswerSchema = new Schema(
   {
     questionKey: String,
@@ -101,6 +104,7 @@ const SecurityQuestionAnswerSchema = new Schema(
   },
   { _id: false }
 )
+// tslint:disable-next-line
 const AuditHistory = new Schema(
   {
     auditedBy: String,

@@ -39,6 +39,23 @@ export function createBirthCertificationDetails(
   )
   delete withIdsRemoved.history
 
+  const completionDays = differenceInDays(
+    createdAt,
+    new Date(declaration.child?.birthDate!)
+  )
+
+  const paymentAmount =
+    completionDays < config.config.BIRTH.REGISTRATION_TARGET
+      ? config.config.BIRTH.FEE.ON_TIME
+      : completionDays < config.config.BIRTH.LATE_REGISTRATION_TARGET
+      ? config.config.BIRTH.FEE.LATE
+      : config.config.BIRTH.FEE.DELAYED
+  log(
+    'Collecting certification payment of',
+    paymentAmount,
+    'for completion days',
+    completionDays
+  )
   const data = {
     ...withIdsRemoved,
     eventLocation: {
@@ -57,6 +74,15 @@ export function createBirthCertificationDetails(
       certificates: [
         {
           hasShowedVerifiedDocument: false,
+          payments: [
+            {
+              type: PaymentType.Manual,
+              total: paymentAmount,
+              amount: paymentAmount,
+              outcome: PaymentOutcomeType.Completed,
+              date: createdAt
+            }
+          ],
           data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
           collector: {
             relationship: 'MOTHER'
@@ -159,7 +185,7 @@ export function createDeathCertificationDetails(
   return removeEmptyFields(data)
 }
 
-export async function markBirthAsCertified(
+export async function markAsCertified(
   id: string,
   user: User,
   details: BirthRegistrationInput

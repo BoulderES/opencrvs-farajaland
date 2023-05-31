@@ -20,6 +20,7 @@ import deathCertificateTemplateDefault from '@countryconfig/features/config/scri
 
 export default async function populateDefaultConfig(ADMIN_LEVELS: number) {
   try {
+    // tslint:disable-next-line:no-console
     console.log(
       `${chalk.blueBright(
         '/////////////////////////// IMPORT DEFAULT CERTIFICATES ///////////////////////////'

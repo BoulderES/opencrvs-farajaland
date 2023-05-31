@@ -34,7 +34,6 @@ interface BirthNotification {
   placeOfBirth: string // Location Resource
   createdAt: string
   officeLocation: string
-  office: string
 }
 
 export function birthNotification({
@@ -46,8 +45,7 @@ export function birthNotification({
   dateOfBirth,
   placeOfBirth,
   createdAt,
-  officeLocation,
-  office
+  officeLocation
 }: BirthNotification) {
   return {
     resourceType: 'Bundle',
@@ -217,12 +215,6 @@ export function birthNotification({
               url: 'http://opencrvs.org/specs/extension/regLastLocation',
               valueReference: {
                 reference: officeLocation
-              }
-            },
-            {
-              url: 'http://opencrvs.org/specs/extension/regLastOffice',
-              valueReference: {
-                reference: office
               }
             }
           ]

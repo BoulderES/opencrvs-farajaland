@@ -9,14 +9,8 @@
  * Copyright (C) The OpenCRVS Authors. OpenCRVS and the OpenCRVS
  * graphic logo are (registered/a) trademark(s) of Plan International.
  */
-import fetchMock, { enableFetchMocks } from 'jest-fetch-mock'
-import { readFileSync } from 'fs'
+import { join } from 'path'
+import * as fetch from 'jest-fetch-mock'
 
-enableFetchMocks()
-
-fetchMock.mockIf(
-  (req) => req.url.endsWith('.well-known'),
-  readFileSync('./test/cert.key.pub').toString()
-)
-
+jest.setMock('node-fetch', { default: fetch })
 process.env.NODE_ENV = 'development'

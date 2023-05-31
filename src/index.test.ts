@@ -17,8 +17,8 @@ import * as locationsService from '@countryconfig/features/administrative/servic
 describe('Route authorization', () => {
   beforeAll(() => {
     jest
-      .spyOn(locationsService, 'getStatistics')
-      .mockReturnValue(Promise.resolve([]))
+      .spyOn(locationsService, 'getLocations')
+      .mockReturnValue(Promise.resolve({ data: [] }))
   })
 
   it('tests the health check', async () => {
@@ -34,7 +34,7 @@ describe('Route authorization', () => {
     const server = await createServer()
     const res = await server.server.inject({
       method: 'GET',
-      url: '/statistics'
+      url: '/locations'
     })
     expect(res.statusCode).toBe(401)
   })
@@ -43,7 +43,7 @@ describe('Route authorization', () => {
     const server = await createServer()
     const res = await server.server.inject({
       method: 'GET',
-      url: '/statistics',
+      url: '/locations',
       headers: {
         Authorization: 'Bearer abc'
       }
@@ -60,7 +60,7 @@ describe('Route authorization', () => {
     })
     const res = await server.server.inject({
       method: 'GET',
-      url: '/statistics',
+      url: '/locations',
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -77,7 +77,7 @@ describe('Route authorization', () => {
     })
     const res = await server.server.inject({
       method: 'GET',
-      url: '/statistics',
+      url: '/locations',
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -100,7 +100,7 @@ describe('Route authorization', () => {
 
     const res = await server.server.inject({
       method: 'GET',
-      url: '/statistics',
+      url: '/locations',
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -108,16 +108,16 @@ describe('Route authorization', () => {
     expect(res.statusCode).toBe(401)
   })
 
-  it('blocks requests signed with wrong algorithm (RS384)', async () => {
+  it('blocks requests signed with wrong algorithm (HS512)', async () => {
     const server = await createServer()
     const token = jwt.sign({}, readFileSync('./test/cert.key'), {
-      algorithm: 'RS384',
+      algorithm: 'HS512',
       issuer: 'opencrvs:auth-service',
       audience: 'opencrvs:countryconfig-user'
     })
     const res = await server.server.inject({
       method: 'GET',
-      url: '/statistics',
+      url: '/locations',
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -135,7 +135,7 @@ describe('Route authorization', () => {
     })
     const res = await server.server.inject({
       method: 'GET',
-      url: '/statistics',
+      url: '/locations',
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -153,7 +153,7 @@ describe('Route authorization', () => {
     })
     const res = await server.server.inject({
       method: 'GET',
-      url: '/statistics',
+      url: '/locations',
       headers: {
         Authorization: `Bearer ${token}`
       }

@@ -167,25 +167,10 @@ context('Advanced Search Integration Test', () => {
   it('death declaration can be found with minimum advancedSearch inputs', () => {
     const deceasedFirstNames = faker.name.firstName()
     const deceasedFamilyName = faker.name.lastName()
-    const deceasedDoB = '1988-08-19'
-    const deceasedGender = 'Male'
-    const informantFirstNames = faker.name.firstName()
-    const informantFamilyName = faker.name.lastName()
-    const informantDoB = '1993-02-20'
-    const eventCountry = 'Farajaland'
-    const eventLocationLevel1 = 'Pualula'
-    const eventLocationLevel2 = 'Embe'
+
     cy.declareDeathDeclarationWithMinimumInput({
       deceasedFirstNames,
-      deceasedFamilyName,
-      deceasedDoB,
-      deceasedGender,
-      informantFirstNames,
-      informantFamilyName,
-      informantDoB,
-      eventCountry,
-      eventLocationLevel1,
-      eventLocationLevel2
+      deceasedFamilyName
     })
 
     cy.login('registrar')
